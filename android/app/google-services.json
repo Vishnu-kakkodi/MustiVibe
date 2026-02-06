@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "94152569178",
+    "project_id": "mastivibes-ec7b1",
+    "storage_bucket": "mastivibes-ec7b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:94152569178:android:8d49145b2cac2737cc4363",
+        "android_client_info": {
+          "package_name": "com.pixelmind.mustivibes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE3V7ZPtQBWF8xw1j57PLLJmuf6901Wi4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
