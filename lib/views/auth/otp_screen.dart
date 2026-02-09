@@ -239,52 +239,104 @@ class _OtpScreenState extends State<OtpScreen> {
     super.dispose();
   }
 
+  // Future<void> _submitOtp() async {
+  //   if (_otp.length < 4) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please enter the 4-digit code')),
+  //     );
+  //     return;
+  //   }
+
+  //   final auth = context.read<AuthProvider>();
+  //   final result = await auth.verifyOtp(context, _otp);
+
+  //   if (!mounted || result == null) return;
+
+  //   // 🔥 WE HAVE USER NOW
+  //   final userId = auth.userId;
+  //   final userName = auth.userName;
+
+  //   print('User iddddddddddddddddddddd $userId');
+  //   print('Userrrrrrrrr naaaaaaaaaaaameeeeeeee $userName');
+     
+  //   if (userId == null || userName == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Login failed. Try again.')),
+  //     );
+  //     return;
+  //   }
+
+  //   // 🔥 INIT ZEGO CALL SYSTEM (ONCE)
+  //   // ZegoCallManager.init(
+  //   //   userId: userId,
+  //   //   userName: userName,
+  //   // );
+
+  //   // // 🔥 LOGIN ZEGO USER
+  //   // ZegoUIKit().login(userId, userName);
+
+  //   if (result == VerifyResult.newUser) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const SetProfile()),
+  //     );
+  //   } else {
+  //     Navigator.pushAndRemoveUntil(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => MainNavigationScreen()),
+  //       (_) => false,
+  //     );
+  //   }
+  // }
+
+
+
   Future<void> _submitOtp() async {
-    if (_otp.length < 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 4-digit code')),
-      );
-      return;
-    }
-
-    final auth = context.read<AuthProvider>();
-    final result = await auth.verifyOtp(context, _otp);
-
-    if (!mounted || result == null) return;
-
-    // 🔥 WE HAVE USER NOW
-    final userId = auth.userId;
-    final userName = auth.userName;
-
-    if (userId == null || userName == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed. Try again.')),
-      );
-      return;
-    }
-
-    // 🔥 INIT ZEGO CALL SYSTEM (ONCE)
-    // ZegoCallManager.init(
-    //   userId: userId,
-    //   userName: userName,
-    // );
-
-    // // 🔥 LOGIN ZEGO USER
-    // ZegoUIKit().login(userId, userName);
-
-    if (result == VerifyResult.newUser) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SetProfile()),
-      );
-    } else {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => MainNavigationScreen()),
-        (_) => false,
-      );
-    }
+  if (_otp.length < 4) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please enter the 4-digit code')),
+    );
+    return;
   }
+
+  final auth = context.read<AuthProvider>();
+  final result = await auth.verifyOtp(context, _otp);
+
+  if (!mounted || result == null) return;
+
+  // 🔥 WE HAVE USER NOW
+  final userId = auth.userId;
+
+  print('User iddddddddddddddddddddd $userId');
+   
+  if (userId == null) {  // ✅ Only check userId
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Login failed. Try again.')),
+    );
+    return;
+  }
+
+  // 🔥 For existing users, you can init Zego here
+  // For new users, init after profile completion
+  // if (result == VerifyResult.existingUser) {
+  //   final userName = auth.userName!;
+  //   ZegoCallManager.init(userId: userId, userName: userName);
+  //   ZegoUIKit().login(userId, userName);
+  // }
+
+  if (result == VerifyResult.newUser) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const SetProfile()),
+    );
+  } else {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => MainNavigationScreen()),
+      (_) => false,
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {

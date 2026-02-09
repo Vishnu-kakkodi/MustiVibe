@@ -81,6 +81,10 @@ class AuthService {
 
     final data = jsonDecode(response.body);
 
+    print('Response status code for verify otppppppppppp ${response.statusCode}');
+        print('Response bodyyyyyyyyyy for verify otppppppppppp ${response.body}');
+
+
     if (response.statusCode == 200 && data['success'] == true) {
       UserModel? user;
       if (data['user'] != null) {
