@@ -37,12 +37,12 @@ class GlobalCallManager {
 
     try {
       // 4️⃣ Send FCM call request
-      await CallApiService.sendCallingRequest(
-        senderId: currentUserId,
-        receiverId: targetUserId,
-        callId: callId,
-        callType: isVideo ? 'video' : 'audio',
-      );
+      // await CallApiService.sendCallingRequest(
+      //   senderId: currentUserId,
+      //   receiverId: targetUserId,
+      //   callId: callId,
+      //   callType: isVideo ? 'video' : 'audio',
+      // );
 
       if (!context.mounted) return;
       Navigator.pop(context);

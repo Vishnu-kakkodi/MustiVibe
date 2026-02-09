@@ -1,43 +1,83 @@
 
+// import 'dart:math';
 // import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+// import 'package:dating_app/services/Call/call_api_service.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+
 
 // class ZegoCallHelper {
-//   static void startAudioCall({
+
+//   static String _generateCallId() {
+//     return DateTime.now().millisecondsSinceEpoch.toString() +
+//         Random().nextInt(999).toString();
+//   }
+
+//   /// AUDIO CALL
+//   static Future<void> startAudioCall({
 //     required String targetUserId,
 //     required String targetUserName,
-//   }) {
+//   }) async {
 //     // 🛡 Safety guard
 //     if (!ZegoUIKitPrebuiltCallInvitationService().isInit) {
 //       print('❌ Zego Call Invitation Service not initialized yet');
 //       return;
 //     }
 
+//     final String callId = _generateCallId();
+//        final prefs = await SharedPreferences.getInstance();
+//     final String senderId = prefs.getString('userId').toString();
+
+//     /// 🔥 CALL API (before starting Zego call)
+//     await CallApiService.sendCallingRequest(
+//       senderId: senderId,
+//       receiverId: targetUserId,
+//       callId: callId,
+//       callType: 'audio',
+//     );
+
+//     /// 🔥 START ZEGO AUDIO CALL
 //     ZegoUIKitPrebuiltCallInvitationService().send(
+//       callID: callId,
 //       isVideoCall: false,
 //       invitees: [
 //         ZegoCallUser(
-//           targetUserId,     // 👈 positional
-//           targetUserName,   // 👈 positional
+//           targetUserId,
+//           targetUserName,
 //         ),
 //       ],
 //     );
 //   }
 
-//   static void startVideoCall({
+//   /// VIDEO CALL
+//   static Future<void> startVideoCall({
 //     required String targetUserId,
 //     required String targetUserName,
-//   }) {
+//   }) async {
 //     if (!ZegoUIKitPrebuiltCallInvitationService().isInit) {
 //       print('❌ Zego Call Invitation Service not initialized yet');
 //       return;
 //     }
 
+//     final String callId = _generateCallId();
+//           final prefs = await SharedPreferences.getInstance();
+//     final String senderId = prefs.getString('userId').toString();
+
+//     /// 🔥 CALL API
+//     await CallApiService.sendCallingRequest(
+//       senderId: senderId,
+//       receiverId: targetUserId,
+//       callId: callId,
+//       callType: 'video',
+//     );
+
+//     /// 🔥 START ZEGO VIDEO CALL
 //     ZegoUIKitPrebuiltCallInvitationService().send(
+//       callID: callId,
 //       isVideoCall: true,
 //       invitees: [
 //         ZegoCallUser(
-//           targetUserId,     // 👈 positional
-//           targetUserName,   // 👈 positional
+//           targetUserId,
+//           targetUserName,
 //         ),
 //       ],
 //     );
@@ -52,87 +92,65 @@
 
 
 
-import 'dart:math';
-import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-import 'package:dating_app/services/Call/call_api_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+
+
+
+
+
+
+
+
+
+import 'dart:convert';
+import 'package:dating_app/views/call/call_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/Call/call_api_service.dart';
+import '../main.dart';
 
 class ZegoCallHelper {
 
-  static String _generateCallId() {
-    return DateTime.now().millisecondsSinceEpoch.toString() +
-        Random().nextInt(999).toString();
-  }
-
-  /// AUDIO CALL
-  static Future<void> startAudioCall({
-    required String targetUserId,
-    required String targetUserName,
+  /// START AUDIO / VIDEO CALL
+  static Future<void> startCall({
+    required String receiverId,
+    required bool isVideo,
   }) async {
-    // 🛡 Safety guard
-    if (!ZegoUIKitPrebuiltCallInvitationService().isInit) {
-      print('❌ Zego Call Invitation Service not initialized yet');
+
+    final prefs = await SharedPreferences.getInstance();
+    final senderId = prefs.getString('userId')!;
+
+    /// 1️⃣ Call backend
+    final response = await CallApiService.sendCallingRequest(
+      senderId: senderId,
+      receiverId: receiverId,
+      callType: isVideo ? "video" : "audio",
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (!data['success']) {
+      debugPrint("Call failed");
       return;
     }
 
-    final String callId = _generateCallId();
-       final prefs = await SharedPreferences.getInstance();
-    final String senderId = prefs.getString('userId').toString();
+    /// 2️⃣ Extract credentials
+    final creds = data['zegoCredentials']['sender'];
 
-    /// 🔥 CALL API (before starting Zego call)
-    await CallApiService.sendCallingRequest(
-      senderId: senderId,
-      receiverId: targetUserId,
-      callId: callId,
-      callType: 'audio',
-    );
+    final roomId = creds['roomId'];
+    final token = creds['token'];
+    final userId = creds['userId'];
 
-    /// 🔥 START ZEGO AUDIO CALL
-    ZegoUIKitPrebuiltCallInvitationService().send(
-      callID: callId,
-      isVideoCall: false,
-      invitees: [
-        ZegoCallUser(
-          targetUserId,
-          targetUserName,
+    /// 3️⃣ Open Call Screen
+    navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          roomId: roomId,
+          token: token,
+          userId: userId,
+          isVideo: isVideo,
         ),
-      ],
-    );
-  }
-
-  /// VIDEO CALL
-  static Future<void> startVideoCall({
-    required String targetUserId,
-    required String targetUserName,
-  }) async {
-    if (!ZegoUIKitPrebuiltCallInvitationService().isInit) {
-      print('❌ Zego Call Invitation Service not initialized yet');
-      return;
-    }
-
-    final String callId = _generateCallId();
-          final prefs = await SharedPreferences.getInstance();
-    final String senderId = prefs.getString('userId').toString();
-
-    /// 🔥 CALL API
-    await CallApiService.sendCallingRequest(
-      senderId: senderId,
-      receiverId: targetUserId,
-      callId: callId,
-      callType: 'video',
-    );
-
-    /// 🔥 START ZEGO VIDEO CALL
-    ZegoUIKitPrebuiltCallInvitationService().send(
-      callID: callId,
-      isVideoCall: true,
-      invitees: [
-        ZegoCallUser(
-          targetUserId,
-          targetUserName,
-        ),
-      ],
+      ),
     );
   }
 }

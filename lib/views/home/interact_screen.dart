@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:dating_app/providers/Coin/coins_provider.dart';
+import 'package:dating_app/services/Call/call_api_service.dart';
 import 'package:dating_app/views/Call/audio_video_popup.dart';
+import 'package:dating_app/views/Call/call_screen.dart';
 import 'package:dating_app/views/connect/connect_screen.dart';
 import 'package:dating_app/views/credits/credits_screen.dart';
 import 'package:dating_app/widgets/animated_text.dart';
@@ -443,6 +446,57 @@ class _InteractScreenState extends State<InteractScreen>
     }
   }
 
+  Future<void> _startCall({
+  required String receiverId,
+  required bool isVideo,
+}) async {
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  try {
+
+    final res = await CallApiService.sendCallingRequest(
+      senderId: widget.currentUserId,
+      receiverId: receiverId,
+      callType: isVideo ? 'video' : 'audio',
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (!data['success']) throw Exception("Call failed");
+
+    final creds = data['zegoCredentials']['sender'];
+
+    Navigator.pop(context);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CallScreen(
+          roomId: creds['roomId'],
+          token: creds['token'],
+          userId: creds['userId'],
+          isVideo: isVideo,
+        ),
+      ),
+    );
+
+  } catch (e) {
+    Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Call failed: $e")),
+    );
+  }
+}
+
+
   // Single user card (avatar + language + name)
   Widget _buildUserCard({
     required BuildContext context,
@@ -450,27 +504,48 @@ class _InteractScreenState extends State<InteractScreen>
   }) {
     return GestureDetector(
       // SAME BEHAVIOUR AS HOME "CALL NOW"
- onTap: () {
-              checkCoinsAndProceed(
-                context: context,
-                onAllowed: () {
-                  if (!ZegoCallManager.isReady) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Call service initializing…'),
-                      ),
-                    );
-                    return;
-                  }
+onTap: () {
+  checkCoinsAndProceed(
+    context: context,
+    onAllowed: () {
 
-                  showCallOptions(
-                    context: context,
-                    targetUserId: user.id,
-                    targetUserName: user.name,
-                  );
-                },
-              );
-            },
+      showModalBottomSheet(
+        context: context,
+        builder: (_) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+
+            ListTile(
+              leading: const Icon(Icons.phone),
+              title: const Text("Audio Call"),
+              onTap: () {
+                Navigator.pop(context);
+                _startCall(
+                  receiverId: user.id,
+                  isVideo: false,
+                );
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: const Text("Video Call"),
+              onTap: () {
+                Navigator.pop(context);
+                _startCall(
+                  receiverId: user.id,
+                  isVideo: true,
+                );
+              },
+            ),
+          ],
+        ),
+      );
+
+    },
+  );
+},
+
       child: Column(
         children: [
 Stack(
