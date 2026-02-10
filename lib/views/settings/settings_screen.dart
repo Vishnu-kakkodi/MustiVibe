@@ -551,33 +551,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const Spacer(),
 
-          /// 🚪 LOGOUT
-          Container(
-            margin: const EdgeInsets.only(bottom: 40),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  side:
-                      const BorderSide(color: Color(0xFFFE0A62), width: 1.8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(35),
-                  ),
-                ),
-                onPressed: () => _logout(context),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Color(0xFFFE0A62),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

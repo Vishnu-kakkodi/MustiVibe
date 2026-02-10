@@ -27,32 +27,42 @@ class RoomService {
   /// POST /api/users/create
 Future<bool> createRoom({
   required String userId,
-  required String type, // "Voice", "chat", etc.
+  required String type,
   required String tag,
   required String startDateTime,
-  required String duration
+  required String duration,
 }) async {
+
   final uri = Uri.parse('$_baseUrl/api/users/create');
-print("llllllllllllllllllll$uri");
+
+  // ✅ Build payload map
+  final payload = {
+    'userId': userId,
+    'type': type.toLowerCase(),
+    'tag': tag,
+    'startDateTime': startDateTime,
+    'duration': int.parse(duration),
+  };
+
+  // ✅ PRINT PAYLOAD (Postman-friendly)
+  print("🚀 API URL: $uri");
+  print("📦 PAYLOAD MAP:");
+  print(payload);
+
+  print("📦 PAYLOAD JSON:");
+  print(jsonEncode(payload));
 
   final response = await http.post(
     uri,
     headers: {'Content-Type': 'application/json'},
-    body: json.encode({
-      'userId': userId,
-      'type': type,
-      'tag': tag,
-      'startDateTime': startDateTime,
-      'duration': int.parse(duration)
-    }),
+    body: jsonEncode(payload),
   );
-print("llllllllllllllllllll${response.body}");
-  // just check status
-  if (response.statusCode == 200 || response.statusCode == 201) {
-    return true;
-  } else {
-    return false;
-  }
+
+  print("📥 RESPONSE STATUS: ${response.statusCode}");
+  print("📥 RESPONSE BODY: ${response.body}");
+
+  return response.statusCode == 200 || response.statusCode == 201;
 }
+
 
 }
