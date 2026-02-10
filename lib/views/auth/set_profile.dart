@@ -1260,7 +1260,7 @@ class _SetProfileState extends State<SetProfile> {
 
               _buildTextField(
                 context: context,
-                label: 'Referral code',
+                label: 'Referral code(Optional)',
                 hint: 'Referral code',
                 icon: Icons.card_giftcard_outlined,
                 controller: _referralController,
@@ -1650,8 +1650,8 @@ class _SetProfileState extends State<SetProfile> {
                     size: 20,
                   ),
                 )
-              else
-                VoiceInputButton(controller: controller),
+              // else
+              //   VoiceInputButton(controller: controller),
             ],
           ),
         ),

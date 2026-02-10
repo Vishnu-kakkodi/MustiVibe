@@ -29,9 +29,11 @@ Future<bool> createRoom({
   required String userId,
   required String type, // "Voice", "chat", etc.
   required String tag,
-  required String startDateTime
+  required String startDateTime,
+  required String duration
 }) async {
   final uri = Uri.parse('$_baseUrl/api/users/create');
+print("llllllllllllllllllll$uri");
 
   final response = await http.post(
     uri,
@@ -40,10 +42,11 @@ Future<bool> createRoom({
       'userId': userId,
       'type': type,
       'tag': tag,
-      'startDateTime': startDateTime
+      'startDateTime': startDateTime,
+      'duration': int.parse(duration)
     }),
   );
-
+print("llllllllllllllllllll${response.body}");
   // just check status
   if (response.statusCode == 200 || response.statusCode == 201) {
     return true;

@@ -48,17 +48,17 @@ class GlobalCallManager {
       Navigator.pop(context);
 
       // 5️⃣ Open call screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomCallPage(
-            userID: currentUserId,
-            userName: currentUserName,
-            callID: callId,
-            isVideoCall: isVideo,
-          ),
-        ),
-      );
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (_) => CustomCallPage(
+      //       userID: currentUserId,
+      //       userName: currentUserName,
+      //       callID: callId,
+      //       isVideoCall: isVideo,
+      //     ),
+      //   ),
+      // );
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context);

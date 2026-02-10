@@ -1,349 +1,10 @@
 
-// import 'dart:async';
-// import 'dart:math' as math;
-// import 'dart:ui';
-
-// import 'package:dating_app/services/Call/call_api_service.dart';
-// import 'package:flutter/material.dart';
-// import 'package:permission_handler/permission_handler.dart';
-// import 'package:zego_uikit/zego_uikit.dart';
-
-// class CustomCallPage extends StatefulWidget {
-//   final String userID;
-//   final String userName;
-//   final String callID;
-//   final bool isVideoCall;
-
-//   const CustomCallPage({
-//     super.key,
-//     required this.userID,
-//     required this.userName,
-//     required this.callID,
-//     required this.isVideoCall,
-//   });
-
-//   @override
-//   State<CustomCallPage> createState() => _CustomCallPageState();
-// }
-
-// class _CustomCallPageState extends State<CustomCallPage>
-//     with SingleTickerProviderStateMixin {
-//   bool _isMicOn = true;
-//   bool _isSpeakerOn = true;
-//   bool _isVideoOn = false;
-//   bool _isTopMenuVisible = false;
-
-//   final Stopwatch _stopwatch = Stopwatch();
-//   Timer? _timer;
-//   String _durationText = '0:00';
-
-//   late final AnimationController _waveController;
-//   late final PageController _pageController;
-//   Timer? _pageTimer;
-
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     _pageController = PageController(viewportFraction: 0.9);
-//     _waveController =
-//         AnimationController(vsync: this, duration: const Duration(seconds: 4))
-//           ..repeat();
-
-//     _joinRoom();
-//   }
-
-//   // ================= JOIN ZEGO ROOM =================
-// Future<void> _joinRoom() async {
-//   debugPrint('Joining room: ${widget.callID}');
-
-//   // 1️⃣ Join room
-//   await ZegoUIKit().joinRoom(widget.callID);
-
-//   // 2️⃣ Enable microphone
-//   ZegoUIKit().turnMicrophoneOn(true, userID: widget.userID);
-
-//   // 3️⃣ Speaker
-//   ZegoUIKit().setAudioOutputToSpeaker(true);
-
-//   // 4️⃣ Enable camera if video call
-//   if (widget.isVideoCall) {
-//     final cam = await Permission.camera.request();
-//     if (cam.isGranted) {
-//       ZegoUIKit().turnCameraOn(true, userID: widget.userID);
-//       _isVideoOn = true;
-//     }
-//   }
-
-//   setState(() {
-//     _isMicOn = true;
-//     _isSpeakerOn = true;
-//   });
-
-//   _startTimer();
-// }
-
-
-
-//   // ================= TIMER =================
-//   void _startTimer() {
-//     _stopwatch.start();
-//     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-//       final s = _stopwatch.elapsed.inSeconds;
-//       setState(() {
-//         _durationText = '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-//       });
-//     });
-//   }
-
-//   // ================= LEAVE ROOM =================
-//   // Future<void> _leaveRoom() async {
-//   //   _timer?.cancel();
-//   //   _pageTimer?.cancel();
-//   //   _stopwatch.stop();
-
-//   //   ZegoUIKit().turnCameraOn(false, userID: widget.userID);
-//   //   ZegoUIKit().turnMicrophoneOn(false, userID: widget.userID);
-//   //     // await CallApiService.updateCallStatus(widget.callID, 'ended');
-
-
-//   //   await ZegoUIKit().leaveRoom();
-
-//   //   if (mounted) Navigator.pop(context);
-//   // }
-
-
-//   Future<void> _leaveRoom() async {
-//   _timer?.cancel();
-//   _stopwatch.stop();
-
-//   ZegoUIKit().turnCameraOn(false, userID: widget.userID);
-//   ZegoUIKit().turnMicrophoneOn(false, userID: widget.userID);
-
-//   await ZegoUIKit().leaveRoom();
-
-//   if (mounted) Navigator.pop(context);
-// }
-
-
-//   // ================= TOGGLES =================
-//   void _toggleMic() {
-//     final v = !_isMicOn;
-//     ZegoUIKit().turnMicrophoneOn(v, userID: widget.userID);
-//     setState(() => _isMicOn = v);
-//   }
-
-//   void _toggleSpeaker() {
-//     final v = !_isSpeakerOn;
-//     ZegoUIKit().setAudioOutputToSpeaker(v);
-//     setState(() => _isSpeakerOn = v);
-//   }
-
-//   Future<void> _enableVideo() async {
-//     if (!widget.isVideoCall) return;
-
-//     final status = await Permission.camera.request();
-//     if (!status.isGranted) return;
-
-//     ZegoUIKit().turnCameraOn(true, userID: widget.userID);
-//     setState(() => _isVideoOn = true);
-//   }
-
-//   void _disableVideo() {
-//     ZegoUIKit().turnCameraOn(false, userID: widget.userID);
-//     setState(() => _isVideoOn = false);
-//   }
-
-//   @override
-//   void dispose() {
-//     _waveController.dispose();
-//     _pageController.dispose();
-//     _timer?.cancel();
-//     _pageTimer?.cancel();
-//     super.dispose();
-//   }
-
-//   // ================= UI =================
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Stack(
-//         children: [
-//           Positioned.fill(
-//             child: Image.asset('assets/background.jpg', fit: BoxFit.cover),
-//           ),
-//           SafeArea(
-//             child: Stack(
-//               children: [
-//                 Positioned.fill(
-//                   child:
-//                       _isVideoOn ? _buildVideoArea() : _buildVoiceBackground(),
-//                 ),
-//                 _buildTopBar(),
-//                 _buildBottomBar(),
-//                 if (_isTopMenuVisible) _buildTopPopupMenu(),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   // ================= VIDEO AREA (REMOTE USER) =================
-//   Widget _buildVideoArea() {
-//     return StreamBuilder<List<ZegoUIKitUser>>(
-//       stream: ZegoUIKit().getUserListStream(),
-//       builder: (context, snapshot) {
-//         final users = snapshot.data ?? [];
-
-//         final remoteUser = users.firstWhere(
-//           (u) => u.id != widget.userID,
-//           orElse: () => ZegoUIKitUser.empty(),
-//         );
-
-//         if (remoteUser.id.isEmpty) {
-//           return const Center(
-//             child: Text(
-//               'Waiting for video...',
-//               style: TextStyle(color: Colors.white),
-//             ),
-//           );
-//         }
-
-//         final notifier =
-//             ZegoUIKit().getAudioVideoViewNotifier(remoteUser.id);
-
-//         return ValueListenableBuilder<Widget?>(
-//           valueListenable: notifier,
-//           builder: (_, view, __) {
-//             return view ??
-//                 const Center(child: CircularProgressIndicator());
-//           },
-//         );
-//       },
-//     );
-//   }
-
-//   // ================= VOICE UI =================
-//   Widget _buildVoiceBackground() {
-//     return Center(
-//       child: AnimatedBuilder(
-//         animation: _waveController,
-//         builder: (_, __) {
-//           final wave =
-//               math.sin(_waveController.value * 2 * math.pi) * 8;
-//           return Transform.translate(
-//             offset: Offset(0, wave),
-//             child: const CircleAvatar(
-//               radius: 60,
-//               backgroundImage: AssetImage('assets/girlimage1.png'),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-
-//   // ================= TOP BAR =================
-//   Widget _buildTopBar() {
-//     return Positioned(
-//       top: 12,
-//       left: 16,
-//       right: 16,
-//       child: Row(
-//         children: [
-//           const CircleAvatar(
-//             backgroundImage: AssetImage('assets/girlimage1.png'),
-//           ),
-//           const SizedBox(width: 10),
-//           Text('+ $_durationText',
-//               style: const TextStyle(color: Colors.white)),
-//           const Spacer(),
-//           IconButton(
-//             icon: const Icon(Icons.more_vert, color: Colors.white),
-//             onPressed: () =>
-//                 setState(() => _isTopMenuVisible = !_isTopMenuVisible),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   // ================= BOTTOM BAR =================
-//   Widget _buildBottomBar() {
-//     return Align(
-//       alignment: Alignment.bottomCenter,
-//       child: Padding(
-//         padding: const EdgeInsets.all(24),
-//         child: ElevatedButton.icon(
-//           style: ElevatedButton.styleFrom(
-//             backgroundColor: Colors.white,
-//             foregroundColor: Colors.red,
-//             shape:
-//                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-//           ),
-//           icon: const Icon(Icons.call_end),
-//           label: const Text('End Call'),
-//           onPressed: _leaveRoom,
-//         ),
-//       ),
-//     );
-//   }
-
-//   // ================= POPUP MENU =================
-//   Widget _buildTopPopupMenu() {
-//     return Positioned(
-//       top: 70,
-//       right: 16,
-//       child: Row(
-//         children: [
-//           IconButton(
-//             icon: Icon(_isMicOn ? Icons.mic : Icons.mic_off),
-//             color: Colors.white,
-//             onPressed: _toggleMic,
-//           ),
-//           IconButton(
-//             icon:
-//                 Icon(_isSpeakerOn ? Icons.volume_up : Icons.volume_off),
-//             color: Colors.white,
-//             onPressed: _toggleSpeaker,
-//           ),
-//           if (widget.isVideoCall)
-//             IconButton(
-//               icon: Icon(
-//                   _isVideoOn ? Icons.videocam : Icons.videocam_off),
-//               color: Colors.white,
-//               onPressed: _isVideoOn ? _disableVideo : _enableVideo,
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:dating_app/services/Call/call_api_service.dart';
+import 'package:dating_app/views/home/room_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:zego_uikit/zego_uikit.dart';
@@ -353,6 +14,8 @@ class CustomCallPage extends StatefulWidget {
   final String userName;
   final String callID;
   final bool isVideoCall;
+  final String startDateTime;
+final int duration;
 
   const CustomCallPage({
     super.key,
@@ -360,6 +23,8 @@ class CustomCallPage extends StatefulWidget {
     required this.userName,
     required this.callID,
     required this.isVideoCall,
+      required this.startDateTime,
+  required this.duration,
   });
 
   @override
@@ -374,7 +39,7 @@ class _CustomCallPageState extends State<CustomCallPage>
   bool _isTopMenuVisible = false;
   bool _isFrontCamera = true;
 
-  final Stopwatch _stopwatch = Stopwatch();
+  // final Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
   String _durationText = '0:00';
 
@@ -382,6 +47,10 @@ class _CustomCallPageState extends State<CustomCallPage>
   
   // For pinning functionality
   String? _pinnedUserId;
+
+  late DateTime _roomStart;
+late DateTime _roomEnd;
+
 
   @override
   void initState() {
@@ -392,7 +61,19 @@ class _CustomCallPageState extends State<CustomCallPage>
           ..repeat();
 
     _joinRoom();
+
+    _roomStart = parseRoomDateTime(widget.startDateTime);
+_roomEnd = _roomStart.add(Duration(minutes: widget.duration));
+
   }
+
+  
+
+  bool get _isClosingSoon {
+  final remaining = _roomEnd.difference(DateTime.now());
+  return remaining.inMinutes <= 3;
+}
+
 
   // ================= JOIN ZEGO ROOM =================
   Future<void> _joinRoom() async {
@@ -425,20 +106,32 @@ class _CustomCallPageState extends State<CustomCallPage>
   }
 
   // ================= TIMER =================
-  void _startTimer() {
-    _stopwatch.start();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final s = _stopwatch.elapsed.inSeconds;
-      setState(() {
-        _durationText = '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
-      });
+void _startTimer() {
+  _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    final now = DateTime.now();
+
+    final remaining = _roomEnd.difference(now);
+
+    if (remaining.isNegative) {
+      _leaveRoom(); // auto close
+      return;
+    }
+
+    final min = remaining.inMinutes;
+    final sec = remaining.inSeconds % 60;
+
+    setState(() {
+      _durationText =
+          '$min:${sec.toString().padLeft(2, '0')}';
     });
-  }
+  });
+}
+
 
   // ================= LEAVE ROOM =================
   Future<void> _leaveRoom() async {
     _timer?.cancel();
-    _stopwatch.stop();
+    // _stopwatch.stop();
 
     ZegoUIKit().turnCameraOn(false, userID: widget.userID);
     ZegoUIKit().turnMicrophoneOn(false, userID: widget.userID);
@@ -951,29 +644,58 @@ class _CustomCallPageState extends State<CustomCallPage>
   }
 
   // ================= TOP BAR =================
-  Widget _buildTopBar() {
-    return Positioned(
-      top: 12,
-      left: 16,
-      right: 16,
-      child: Row(
-        children: [
-          const CircleAvatar(
-            backgroundImage: AssetImage('assets/girlimage1.png'),
-          ),
-          const SizedBox(width: 10),
-          Text('$_durationText',
-              style: const TextStyle(color: Colors.white, fontSize: 16)),
-          const Spacer(),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () =>
-                setState(() => _isTopMenuVisible = !_isTopMenuVisible),
-          ),
-        ],
-      ),
-    );
-  }
+Widget _buildTopBar() {
+  return Positioned(
+    top: 12,
+    left: 16,
+    right: 16,
+    child: Row(
+      children: [
+        const CircleAvatar(
+          backgroundImage: AssetImage('assets/girlimage1.png'),
+        ),
+        const SizedBox(width: 10),
+
+        /// ✅ TIMER TEXT
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _durationText,
+              style: TextStyle(
+                color: _isClosingSoon ? Colors.red : Colors.white,
+                fontSize: 16,
+                fontWeight: _isClosingSoon
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+
+            /// ✅ CLOSING WARNING
+            if (_isClosingSoon)
+              const Text(
+                "Room closing soon!",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+
+        const Spacer(),
+
+        IconButton(
+          icon: const Icon(Icons.more_vert, color: Colors.white),
+          onPressed: () =>
+              setState(() => _isTopMenuVisible = !_isTopMenuVisible),
+        ),
+      ],
+    ),
+  );
+}
+
 
   // ================= BOTTOM BAR =================
   Widget _buildBottomBar() {

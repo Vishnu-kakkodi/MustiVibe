@@ -5,29 +5,26 @@ import 'package:http/http.dart' as http;
 class CallApiService {
   static const baseUrl = '${ApiConstants.baseUrl}/api/users';
 
-static Future<http.Response> sendCallingRequest({
-  required String senderId,
-  required String receiverId,
-  required String callType,
-}) async {
+  static Future<void> sendCallingRequest({
+    required String senderId,
+    required String receiverId,
+    required String callId,
+    required String callType,
+  }) async {
+    print("pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp$callType");
+    final res = await http.post(
+      Uri.parse('$baseUrl/sendcallingrequest'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "senderId": senderId,
+        "receiverId": receiverId,
+        "callerId": callId,
+        "callType": callType,
+      }),
+    );
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/sendcallingrequest'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      "senderId": senderId,
-      "receiverId": receiverId,
-      "callType": callType,
-    }),
-  );
-
-  print("📞 Call API Status: ${response.statusCode}");
-  print("📞 Call API Body: ${response.body}");
-
-  return response;
-}
-
-
+    print("rrrrrrrrrrrrrrrrrrrrrrrrrrrr${res.body}");
+  }
 
   static Future<void> updateCallStatus(
     String callId,

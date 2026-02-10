@@ -2199,20 +2199,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 //     title: 'Edit Profile',
                 //   ),
                 // ),
-                // GestureDetector(
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) => const TransactionHistory()),
-                //     );
-                //   },
-                //   child: _buildMenuItem(
-                //     context: context,
-                //     icon: Icons.swap_horiz,
-                //     title: 'Transactions',
-                //   ),
-                // ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const TransactionHistory()),
+                    );
+                  },
+                  child: _buildMenuItem(
+                    context: context,
+                    icon: Icons.swap_horiz,
+                    title: 'Transactions',
+                  ),
+                ),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -2243,20 +2243,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: 'Blocked Chats',
                   ),
                 ),
-                // GestureDetector(
-                //   onTap: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(
-                //           builder: (context) => const EarningScreen()),
-                //     );
-                //   },
-                //   child: _buildMenuItem(
-                //     context: context,
-                //     icon: Icons.account_balance_wallet_outlined,
-                //     title: 'My Earnings',
-                //   ),
-                // ),
+   if (user?.gender?.toLowerCase() == 'female')
+  GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>  EarningScreen(userId: _userId!),
+        ),
+      );
+    },
+    child: _buildMenuItem(
+      context: context,
+      icon: Icons.account_balance_wallet_outlined,
+      title: 'My Earnings',
+    ),
+  ),
+
                 GestureDetector(
                   onTap: () {
                     _launchUrl('https://mastivibe.vercel.app/');

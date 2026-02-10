@@ -1,13 +1,53 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ReferAndEarnScreen extends StatelessWidget {
-  ReferAndEarnScreen({super.key});
+class ReferAndEarnScreen extends StatefulWidget {
+  const ReferAndEarnScreen({super.key});
 
-  final String referralCode = "MUSTI123"; // 🔹 dummy referral code
+  @override
+  State<ReferAndEarnScreen> createState() => _ReferAndEarnScreenState();
+}
+
+class _ReferAndEarnScreenState extends State<ReferAndEarnScreen> {
+
+  String referralCode = "";
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchReferralCode();
+  }
+
+  /// 🔹 Fetch referral code from API
+  Future<void> fetchReferralCode() async {
+        final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString('userId');
+    final response = await http.get(
+      Uri.parse(
+        "http://31.97.206.144:4055/api/users/getmyreffralcode/$id",
+      ),
+      // Add headers if needed
+      // headers: {"Authorization": "Bearer TOKEN"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      setState(() {
+        referralCode = data["myReferralCode"];
+        isLoading = false;
+      });
+    } else {
+      setState(() => isLoading = false);
+    }
+  }
 
   /// Copy video from assets to temp so it can be shared
   Future<File> _getVideoFile() async {
@@ -96,7 +136,7 @@ class ReferAndEarnScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            /// Referral Code Box
+            /// Referral Code Box (UNCHANGED UI)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
@@ -108,7 +148,7 @@ class ReferAndEarnScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    referralCode,
+                    isLoading ? "Loading..." : referralCode,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -117,14 +157,17 @@ class ReferAndEarnScreen extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(text: referralCode),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Referral code copied")),
-                      );
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            Clipboard.setData(
+                              ClipboardData(text: referralCode),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text("Referral code copied")),
+                            );
+                          },
                   ),
                 ],
               ),
@@ -132,12 +175,12 @@ class ReferAndEarnScreen extends StatelessWidget {
 
             const Spacer(),
 
-            /// Refer Button
+            /// Refer Button (UNCHANGED)
             SizedBox(
               width: double.infinity,
               height: 54,
               child: ElevatedButton.icon(
-                onPressed: _shareApp,
+                onPressed: isLoading ? null : _shareApp,
                 icon: const Icon(Icons.share),
                 label: const Text(
                   "Refer & Earn",

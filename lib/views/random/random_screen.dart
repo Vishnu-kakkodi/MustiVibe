@@ -1,5 +1,5 @@
-
 import 'dart:convert';
+import 'package:dating_app/views/Call/audio_video_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,13 +66,11 @@ class _RandomScreenState extends State<RandomScreen>
   }
 
   // ================= CALL TYPE MODAL =================
-  void _showCallOptionsDialog({
-    required Map<String, dynamic> call,
-  }) {
+  void _showCallOptionsDialog({required Map<String, dynamic> call}) {
     final isMeSender = call['senderId']['_id'] == _userId;
     final receiver = isMeSender ? call['receiverId'] : call['senderId'];
     final name = receiver['name'] ?? 'Unknown';
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -100,17 +98,14 @@ class _RandomScreenState extends State<RandomScreen>
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
+
               // Profile section
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.pink.shade300,
-                      Colors.purple.shade300,
-                    ],
+                    colors: [Colors.pink.shade300, Colors.purple.shade300],
                   ),
                 ),
                 child: const CircleAvatar(
@@ -119,7 +114,7 @@ class _RandomScreenState extends State<RandomScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               Text(
                 name,
                 style: const TextStyle(
@@ -130,13 +125,10 @@ class _RandomScreenState extends State<RandomScreen>
               const SizedBox(height: 8),
               Text(
                 'Choose call typerr',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 30),
-              
+
               // Call buttons
               Row(
                 children: [
@@ -146,16 +138,17 @@ class _RandomScreenState extends State<RandomScreen>
                       title: 'Voice Call',
                       price: '10 coins/min',
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade400,
-                          Colors.blue.shade600,
-                        ],
+                        colors: [Colors.blue.shade400, Colors.blue.shade600],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       onTap: () {
                         Navigator.pop(context);
-                        _startCall(call, isVideo: false);
+                        showCallOptions(
+                          context: context,
+                          targetUserId: receiver['_id'],
+                          targetUserName: receiver['name'],
+                        );
                       },
                     ),
                   ),
@@ -166,16 +159,17 @@ class _RandomScreenState extends State<RandomScreen>
                       title: 'Video Call',
                       price: '15 coins/min',
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.pink.shade400,
-                          Colors.purple.shade500,
-                        ],
+                        colors: [Colors.pink.shade400, Colors.purple.shade500],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       onTap: () {
                         Navigator.pop(context);
-                        _startCall(call, isVideo: true);
+                        showCallOptions(
+                          context: context,
+                          targetUserId: receiver['_id'],
+                          targetUserName: receiver['name'],
+                        );
                       },
                     ),
                   ),
@@ -289,22 +283,6 @@ class _RandomScreenState extends State<RandomScreen>
       //   callId: callId,
       //   callType: isVideo ? 'video' : 'audio',
       // );
-
-      if (mounted) {
-        Navigator.pop(context);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CustomCallPage(
-              userID: senderId,
-              userName: _name,
-              callID: callId,
-              isVideoCall: isVideo,
-            ),
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
@@ -363,10 +341,7 @@ class _RandomScreenState extends State<RandomScreen>
                 dividerColor: Colors.transparent,
                 indicator: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.pink.shade400,
-                      Colors.purple.shade400,
-                    ],
+                    colors: [Colors.pink.shade400, Colors.purple.shade400],
                   ),
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
@@ -415,16 +390,11 @@ class _RandomScreenState extends State<RandomScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    color: Colors.pink.shade400,
-                  ),
+                  CircularProgressIndicator(color: Colors.pink.shade400),
                   const SizedBox(height: 16),
                   Text(
                     'Loading calls...',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],
               ),
@@ -434,9 +404,7 @@ class _RandomScreenState extends State<RandomScreen>
               children: [
                 _buildCallList(_allCalls),
                 _buildCallList(
-                  _allCalls
-                      .where((c) => c['type'] == 'call_missed')
-                      .toList(),
+                  _allCalls.where((c) => c['type'] == 'call_missed').toList(),
                   isMissed: true,
                 ),
               ],
@@ -464,7 +432,9 @@ class _RandomScreenState extends State<RandomScreen>
                 ],
               ),
               child: Icon(
-                isMissed ? Icons.call_missed_rounded : Icons.phone_disabled_rounded,
+                isMissed
+                    ? Icons.call_missed_rounded
+                    : Icons.phone_disabled_rounded,
                 size: 60,
                 color: Colors.grey.shade400,
               ),
@@ -480,13 +450,10 @@ class _RandomScreenState extends State<RandomScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              isMissed 
+              isMissed
                   ? 'You haven\'t missed any calls yet'
                   : 'Start connecting with friends',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -521,7 +488,18 @@ class _RandomScreenState extends State<RandomScreen>
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () => _showCallOptionsDialog(call: call),
+              onTap: () {
+  final isMeSender = call['senderId']['_id'] == _userId;
+  final receiver =
+      isMeSender ? call['receiverId'] : call['senderId'];
+
+  showCallOptions(
+    context: context,
+    targetUserId: receiver['_id'],
+    targetUserName: receiver['name'] ?? 'Unknown',
+  );
+},
+
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -545,7 +523,7 @@ class _RandomScreenState extends State<RandomScreen>
                       ),
                     ),
                     const SizedBox(width: 14),
-                    
+
                     // Call info
                     Expanded(
                       child: Column(
@@ -567,8 +545,8 @@ class _RandomScreenState extends State<RandomScreen>
                                     ? Icons.call_missed_rounded
                                     : Icons.call_received_rounded,
                                 size: 16,
-                                color: isMissed 
-                                    ? Colors.red.shade400 
+                                color: isMissed
+                                    ? Colors.red.shade400
                                     : Colors.green.shade400,
                               ),
                               const SizedBox(width: 6),
@@ -584,22 +562,22 @@ class _RandomScreenState extends State<RandomScreen>
                         ],
                       ),
                     ),
-                    
+
                     // Call type icon
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isVideoCall 
-                            ? Colors.pink.shade50 
+                        color: isVideoCall
+                            ? Colors.pink.shade50
                             : Colors.blue.shade50,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isVideoCall 
-                            ? Icons.videocam_rounded 
+                        isVideoCall
+                            ? Icons.videocam_rounded
                             : Icons.phone_rounded,
-                        color: isVideoCall 
-                            ? Colors.pink.shade400 
+                        color: isVideoCall
+                            ? Colors.pink.shade400
                             : Colors.blue.shade400,
                         size: 20,
                       ),

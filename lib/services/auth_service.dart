@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:dating_app/core/api_constants.dart';
 import 'package:dating_app/models/user_model.dart';
 import 'package:dating_app/services/Call/fcm_service.dart';
+import 'package:http_parser/http_parser.dart';
+
 
 
 class SendOtpResponse {
@@ -105,21 +107,25 @@ class AuthService {
     }
   }
 
-  Future<UserModel> createProfile({
-    required String userId,
-    required String name,
-    required String nickname,
-    required String gender, // 'male'/'female'
-    required DateTime dob,
-    required String referralCode,
-    required String language,
-    required String userType, // 'normal'
-    File? profileImage, // optional for now
-  }) async {
+Future<UserModel> createProfile({
+  required String userId,
+  required String name,
+  required String nickname,
+  required String gender,
+  required DateTime dob,
+  required String referralCode,
+  required String language,
+  required String userType,
+  File? profileImage,
+}) async {
+  try {
     final uri = Uri.parse(ApiConstants.createProfile(userId));
+
+    print("🚀 API URL: $uri");
 
     final request = http.MultipartRequest('PUT', uri);
 
+    /// ✅ ADD FIELDS
     request.fields['name'] = name;
     request.fields['nickname'] = nickname;
     request.fields['gender'] = gender;
@@ -127,26 +133,90 @@ class AuthService {
     request.fields['referralCode'] = referralCode;
     request.fields['language'] = language;
     request.fields['userType'] = userType;
-      print("lsffksjfldsjjfdjffjsfjjfslfjl");
+
+    /// ✅ ADD IMAGE
+ if (profileImage != null) {
+  final ext = profileImage.path.split('.').last.toLowerCase();
+
+  MediaType mediaType;
+
+  switch (ext) {
+    case 'jpg':
+    case 'jpeg':
+      mediaType = MediaType('image', 'jpeg');
+      break;
+    case 'png':
+      mediaType = MediaType('image', 'png');
+      break;
+    case 'gif':
+      mediaType = MediaType('image', 'gif');
+      break;
+    default:
+      throw Exception("Unsupported image type");
+  }
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'profileImage',
+      profileImage.path,
+      contentType: mediaType,
+    ),
+  );
+}
+
+    /// ✅ PRINT FULL PAYLOAD (POSTMAN FRIENDLY)
+    print("\n========== MULTIPART PAYLOAD ==========");
+
+    request.fields.forEach((key, value) {
+      print("FIELD ➜ $key: $value");
+    });
 
     if (profileImage != null) {
-      print("lsffksjfldsjjfdjffjsfjjfslfjl");
-      request.files.add(
-        await http.MultipartFile.fromPath('profileImage', profileImage.path),
-      );
+      final fileName = profileImage.path.split('/').last;
+      final ext = profileImage.path.split('.').last.toLowerCase();
+      final size = await profileImage.length();
+
+      print("FILE ➜ profileImage");
+      print("   name: $fileName");
+      print("   format: $ext");
+      print("   size: ${(size / 1024).toStringAsFixed(2)} KB");
     }
 
+    print("=======================================\n");
+
+    /// ✅ PRINT JSON VIEW
+    print("📦 JSON VIEW (fields only):");
+    print(jsonEncode(request.fields));
+
+    /// ✅ PRINT HEADERS
+    print("📨 HEADERS: ${request.headers}");
+
+    print("📡 Sending request...");
 
     final streamed = await request.send();
+
+    print("✅ Status Code: ${streamed.statusCode}");
+
     final response = await http.Response.fromStream(streamed);
+
+    print("📥 RAW RESPONSE:");
+    print(response.body);
+
     final data = jsonDecode(response.body);
-    print("Response: $data");
+
+    print("📥 DECODED RESPONSE:");
+    print(data);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      final userJson = data['user'];
-      return UserModel.fromJson(userJson);
+      return UserModel.fromJson(data['user']);
     } else {
       throw Exception(data['message'] ?? 'Failed to create profile');
     }
+  } catch (e) {
+    print("❌ ERROR OCCURRED:");
+    print(e);
+    rethrow;
   }
+}
+
 }

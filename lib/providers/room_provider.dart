@@ -33,14 +33,16 @@ Future<bool> createRoom({
   required String userId,
   required String type,
   required String tag,
-  required String startDateTime
+  required String startDateTime,
+  required String duration
 }) async {
   try {
     final success = await _service.createRoom(
       userId: userId,
       type: type,
       tag: tag,
-      startDateTime: startDateTime
+      startDateTime: startDateTime,
+      duration: duration
     );
 
     if (success) {

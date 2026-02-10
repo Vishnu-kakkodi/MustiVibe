@@ -206,17 +206,17 @@ class GlobalCallNavigator {
       final userName = localUser?.name ?? 'User';
 
       // Navigate to call screen
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomCallPage(
-            userID: userID,
-            userName: userName,
-            callID: callId,
-            isVideoCall: CallSignal.isVideo,
-          ),
-        ),
-      );
+      // await Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (_) => CustomCallPage(
+      //       userID: userID,
+      //       userName: userName,
+      //       callID: callId,
+      //       isVideoCall: CallSignal.isVideo,
+      //     ),
+      //   ),
+      // );
 
       debugPrint('✅ Call screen opened successfully');
       

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dating_app/providers/Coin/coins_provider.dart';
 import 'package:dating_app/views/MyRoom/my_rooms_screen.dart';
 import 'package:dating_app/views/credits/credits_screen.dart';
@@ -9,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/room_model.dart';
 import '../../providers/room_provider.dart';
+import 'package:http/http.dart' as http;
+
 
 /// ---------- GLOBAL DIALOG HELPERS ----------
 
@@ -522,71 +526,143 @@ Text(
     );
   }
 
-  void _joinGroupCall(BuildContext context, String currentUserId, String name) {
-    // 1. Get current user data
-    // Replace with your real auth logic
-    // final auth = context.read<AuthProvider>();
-    // final userId = auth.user.id;
-    // final userName = auth.user.nickname ?? auth.user.name ?? 'Guest';
+  // void _joinGroupCall(BuildContext context, String currentUserId, String name) {
+  //   // 1. Get current user data
+  //   // Replace with your real auth logic
+  //   // final auth = context.read<AuthProvider>();
+  //   // final userId = auth.user.id;
+  //   // final userName = auth.user.nickname ?? auth.user.name ?? 'Guest';
 
-    // TEMP hardcoded just to test:
-    final userId = currentUserId;
-    final userName = name;
+  //   // TEMP hardcoded just to test:
+  //   final userId = currentUserId;
+  //   final userName = name;
 
-    // 2. Decide audio or video based on room.type
-    final typeStr = room.type.toLowerCase(); // "Voice" / "chat" / "Video"
-    final MyCallType callType = typeStr == 'voice'
-        ? MyCallType.groupVoice
-        : MyCallType.groupVideo;
+  //   // 2. Decide audio or video based on room.type
+  //   final typeStr = room.type.toLowerCase(); // "Voice" / "chat" / "Video"
+  //   final MyCallType callType = typeStr == 'voice'
+  //       ? MyCallType.groupVoice
+  //       : MyCallType.groupVideo;
 
-    // 3. Use backend room id as Zego room/call id
-    final callId = room.id; // or room._id from your model
-    print("sjdhfdskdsjgfdsjlsj$userId");
-    print(userName);
+  //   // 3. Use backend room id as Zego room/call id
+  //   final callId = room.id; // or room._id from your model
+  //   print("sjdhfdskdsjgfdsjlsj$userId");
+  //   print(userName);
 
-    print(callId);
+  //   print(callId);
 
-    print(callType);
+  //   print(callType);
 
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => ZegoCallPage(
-    //       userID: userId,
-    //       userName: userName,
-    //       callID: callId,
-    //       type: callType,
-    //     ),
-    //   ),
-    // );
-    if (callType.toString() == 'MyCallType.groupVoice') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomCallPage(
-            userID: userId,
-            userName: userName,
-            callID: callId,
-            // type: callType,
-            isVideoCall: false,
-          ),
-        ),
+  //   // Navigator.push(
+  //   //   context,
+  //   //   MaterialPageRoute(
+  //   //     builder: (_) => ZegoCallPage(
+  //   //       userID: userId,
+  //   //       userName: userName,
+  //   //       callID: callId,
+  //   //       type: callType,
+  //   //     ),
+  //   //   ),
+  //   // );
+  //   if (callType.toString() == 'MyCallType.groupVoice') {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (_) => CustomCallPage(
+  //           userID: userId,
+  //           userName: userName,
+  //           callID: callId,
+  //           // type: callType,
+  //           isVideoCall: false,
+  //             startDateTime: room.startDateTime,
+  // duration: room.duration,
+  //         ),
+  //       ),
+  //     );
+  //   } else if (callType.toString() == 'MyCallType.groupVideo') {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (_) => CustomCallPage(
+  //           userID: userId,
+  //           userName: userName,
+  //           callID: callId,
+  //           // type: callType,
+  //           isVideoCall: true,
+  //             startDateTime: room.startDateTime,
+  // duration: room.duration,
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
+
+
+
+  void _joinGroupCall(
+  BuildContext context,
+  String currentUserId,
+  String name,
+) async {
+  final userId = currentUserId;
+  final userName = name;
+
+  /// ✅ 1. Check already joined
+  final alreadyJoined =
+      room.joinedUsers.any((u) => u.userId == userId);
+
+  bool canEnter = alreadyJoined;
+
+  /// ✅ 2. If not joined → call API
+  if (!alreadyJoined) {
+    try {
+      final res = await http.post(
+        Uri.parse('http://31.97.206.144:4055/api/users/joinroom'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "roomId": room.id,
+          "users": [userId],
+        }),
       );
-    } else if (callType.toString() == 'MyCallType.groupVideo') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CustomCallPage(
-            userID: userId,
-            userName: userName,
-            callID: callId,
-            // type: callType,
-            isVideoCall: true,
-          ),
-        ),
+
+      final data = jsonDecode(res.body);
+
+      if (res.statusCode == 200 && data['success'] == true) {
+        canEnter = true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Insufficient coins")),
+        );
+        return;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Join room error")),
       );
+      return;
     }
   }
+
+  /// ✅ 3. Enter call if allowed
+  if (!canEnter) return;
+
+  final typeStr = room.type.toLowerCase();
+  final isVideo = typeStr != 'voice';
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CustomCallPage(
+        userID: userId,
+        userName: userName,
+        callID: room.id,
+        isVideoCall: isVideo,
+        startDateTime: room.startDateTime,
+        duration: room.duration,
+      ),
+    ),
+  );
+}
+
 }
 
 Widget _buildAvatar(String imageUrl, {bool isLarge = false}) {
@@ -625,14 +701,8 @@ class AudioCallDialog extends StatefulWidget {
 }
 
 class _AudioCallDialogState extends State<AudioCallDialog> {
+  int selectedDuration = 30; 
 final List<String> topics = [
-  'Love',
-  'Dating',
-  'Flirting',
-  'Late Night Talks',
-  'Truth or Dare',
-  'Movies',
-  'Music',
   'Games',
   'Travel',
   'Deep Talks',
@@ -861,7 +931,44 @@ final List<String> topics = [
             ),
           ),
 
+          const SizedBox(height: 16),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+
+    ChoiceChip(
+      label: const Text("30 min"),
+      selected: selectedDuration == 30,
+      onSelected: (_) {
+        setState(() => selectedDuration = 30);
+      },
+      selectedColor: const Color(0xFFFE0A62),
+      labelStyle: TextStyle(
+        color: selectedDuration == 30 ? Colors.white : Colors.black,
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    ChoiceChip(
+      label: const Text("60 min"),
+      selected: selectedDuration == 60,
+      onSelected: (_) {
+        setState(() => selectedDuration = 60);
+      },
+      selectedColor: const Color(0xFFFE0A62),
+      labelStyle: TextStyle(
+        color: selectedDuration == 60 ? Colors.white : Colors.black,
+      ),
+    ),
+  ],
+),
+
+
           const SizedBox(height: 24),
+
+          
 
           /// 🔹 CREATE ROOM BUTTON (already exists)
           SizedBox(
@@ -905,6 +1012,7 @@ final List<String> topics = [
                   type: type,
                   tag: selectedTopics.first,
                   startDateTime: _formatDateTime(selectedDateTime!), // 🔥
+                  duration: selectedDuration.toString(),
                 );
               },
               child: const Text('Create Room'),
@@ -972,18 +1080,14 @@ class VideoCallDialog extends StatefulWidget {
 
 class _VideoCallDialogState extends State<VideoCallDialog> {
 final List<String> topics = [
-  'Love',
-  'Dating',
-  'Flirting',
-  'Late Night Talks',
-  'Truth or Dare',
-  'Movies',
   'Music',
   'Games',
   'Travel',
   'Deep Talks',
   'Random Chat',
 ];
+
+int selectedDuration = 30; 
 
   final Set<String> selectedTopics = {};
 
@@ -1099,6 +1203,40 @@ final List<String> topics = [
             ),
           ),
 
+          const SizedBox(height: 16),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    ChoiceChip(
+      label: const Text("30 min"),
+      selected: selectedDuration == 30,
+      onSelected: (_) {
+        setState(() => selectedDuration = 30);
+      },
+      selectedColor: const Color(0xFFFE0A62),
+      labelStyle: TextStyle(
+        color: selectedDuration == 30 ? Colors.white : Colors.black,
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    ChoiceChip(
+      label: const Text("60 min"),
+      selected: selectedDuration == 60,
+      onSelected: (_) {
+        setState(() => selectedDuration = 60);
+      },
+      selectedColor: const Color(0xFFFE0A62),
+      labelStyle: TextStyle(
+        color: selectedDuration == 60 ? Colors.white : Colors.black,
+      ),
+    ),
+  ],
+),
+
+
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -1134,6 +1272,7 @@ final List<String> topics = [
                   type: type,
                   tag: tag,
                   startDateTime: _formatDateTime(selectedDateTime!),
+                  duration: selectedDuration.toString()
                 );
 
                 // close loader

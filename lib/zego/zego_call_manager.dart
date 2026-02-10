@@ -43,8 +43,8 @@
 
 
 import 'package:flutter/material.dart';
-// import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-// import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import '../config/zego_config.dart';
 import 'global_call_navigator.dart';
 
@@ -111,21 +111,27 @@ class ZegoCallManager {
   }) {
     if (_initialized) return;
 
-    // ZegoUIKitPrebuiltCallInvitationService().init(
-    //   appID: ZegoConfig.appID,
-    //   appSign: ZegoConfig.appSign,
-    //   userID: userId,
-    //   userName: userName,
-    //   plugins: [ZegoUIKitSignalingPlugin()],
-    // );
+    ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: ZegoConfig.appID,
+      appSign: ZegoConfig.appSign,
+      userID: userId,
+      userName: userName,
+      plugins: [ZegoUIKitSignalingPlugin()],
+  //       ringtoneConfig: ZegoRingtoneConfig(
+  //   incomingCallPath: "assets/ringtone.mp3",
+  //   outgoingCallPath: "assets/ringtone.mp3",
+  // ),
+    );
 
     _initialized = true;
     debugPrint('✅ Zego Call Invitation initialized');
   }
 
-  // static void uninit() {
-  //   if (!_initialized) return;
-  //   ZegoUIKitPrebuiltCallInvitationService().uninit();
-  //   _initialized = false;
-  // }
+  static void uninit() {
+    if (!_initialized) return;
+    ZegoUIKitPrebuiltCallInvitationService().uninit();
+    _initialized = false;
+  }
+
+  
 }
